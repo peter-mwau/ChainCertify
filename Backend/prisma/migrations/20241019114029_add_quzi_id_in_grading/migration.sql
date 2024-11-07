@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `Grading` ADD COLUMN `quizId` INTEGER NULL;
+
+-- AddForeignKey
+ALTER TABLE `Grading` ADD CONSTRAINT `Quiz__Grading` FOREIGN KEY (`quizId`) REFERENCES `Quiz`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
