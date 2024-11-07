@@ -6,6 +6,9 @@ import { useAuth } from "../contexts/authContext";
 import { UserContext } from "../contexts/userContext";
 import { DarkModeContext } from "../contexts/themeContext";
 import { MdOutlineLightMode } from "react-icons/md";
+// import { useEthersSigner } from "../components/useClientSigner";
+import { useDisconnect, useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const Navbar = () => {
   const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
@@ -13,6 +16,8 @@ const Navbar = () => {
   const [openProfile, setIsOpenProfile] = useState(false);
   const { isLoggedIn, logout, user } = useAuth();
   const { loading } = useContext(UserContext);
+  const { isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     if (isDarkMode) {
@@ -127,6 +132,15 @@ const Navbar = () => {
             <MdDarkMode className="text-2xl font-bold w-[70px] stroke-3" />
           )}
         </button>
+
+        <div>
+          <ConnectButton
+            accountStatus={{
+              smallScreen: "avatar",
+              largeScreen: "full",
+            }}
+          />
+        </div>
 
         {/* Mobile Dropdown Menu */}
         <div

@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { DarkModeProvider } from '../contexts/themeContext';
+import { DarkModeProvider } from "../contexts/themeContext";
 import { UserContext } from "../contexts/userContext";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '../contexts/authContext';
+import { useAuth } from "../contexts/authContext";
 import { QuizContext } from "../contexts/quizContext";
 import { AssignmentContext } from "../contexts/assignmentContext";
+import "@rainbow-me/rainbowkit/styles.css";
+import {
+  getDefaultConfig,
+  RainbowKitProvider,
+  lightTheme,
+} from "@rainbow-me/rainbowkit";
+import { WagmiProvider } from "wagmi";
+import { sepolia, mainnet, skaleTitanTestnet } from "wagmi/chains";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 export default function Providers({ children }) {
   const [user, setUser] = useState(null);
@@ -14,6 +23,15 @@ export default function Providers({ children }) {
   const { refreshAccessToken, accessToken, api } = useAuth();
   const [quiz, setQuiz] = useState(null);
   const [assignments, setAssignments] = useState(null);
+
+  const config = getDefaultConfig({
+    appName: "My RainbowKit App",
+    projectId: "1e91e33eb8db73af7f34de8d02fb03f1",
+    chains: [sepolia, mainnet, skaleTitanTestnet],
+    ssr: false,
+  });
+
+  const queryClient = new QueryClient();
 
   // Function to get user details
   const getUser = useCallback(async () => {
@@ -24,7 +42,7 @@ export default function Providers({ children }) {
 
     try {
       const response = await api.get("/api/users/profile", {
-        headers: { Authorization: `Bearer ${accessToken}` }
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       setUser(response.data);
     } catch (error) {
@@ -84,16 +102,16 @@ export default function Providers({ children }) {
   // Set up visibility change listener to refresh data when tab becomes active
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         refreshAllData();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     // Clean up event listener on unmount
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [refreshAllData]);
 
@@ -103,11 +121,11 @@ export default function Providers({ children }) {
       refreshAllData();
     };
 
-    window.addEventListener('focus', handleFocus);
-    
+    window.addEventListener("focus", handleFocus);
+
     // Clean up event listener on unmount
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [refreshAllData]);
 
@@ -115,12 +133,37 @@ export default function Providers({ children }) {
     return <div>Loading...</div>;
   }
 
+  Providers.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
+
   return (
     <DarkModeProvider>
-      <UserContext.Provider value={{ user, setUser, loading, refreshData: refreshAllData }}>
-        <QuizContext.Provider value={{ quiz, setQuiz, refreshQuizzes: getQuizes }}>
-          <AssignmentContext.Provider value={{ assignments, setAssignments, refreshAssignments: fetchAssignments }}>
-            {children}
+      <UserContext.Provider
+        value={{ user, setUser, loading, refreshData: refreshAllData }}
+      >
+        <QuizContext.Provider
+          value={{ quiz, setQuiz, refreshQuizzes: getQuizes }}
+        >
+          <AssignmentContext.Provider
+            value={{
+              assignments,
+              setAssignments,
+              refreshAssignments: fetchAssignments,
+            }}
+          >
+            <WagmiProvider config={config}>
+              <QueryClientProvider client={queryClient}>
+                <RainbowKitProvider
+                  theme={lightTheme({
+                    accentColor: "#083344",
+                    accentColorForeground: "white",
+                  })}
+                >
+                  {children}
+                </RainbowKitProvider>
+              </QueryClientProvider>
+            </WagmiProvider>
           </AssignmentContext.Provider>
         </QuizContext.Provider>
       </UserContext.Provider>
