@@ -99,9 +99,18 @@ const Reports = () => {
     <div className="container mx-auto p-4 transition-all duration-1000 w-full md:w-[70%] md:mx-auto md:ml-[240px] lg:w-[60%] lg:mx-auto">
       <div className="mx-auto right-0 flex items-end justify-end">
         {mintAllowed ? (
-          <button className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500">
-            Claim Certificate
-          </button>
+          user.grading[0].grade >= 80 ? (
+            <button className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500">
+              Claim Certificate
+            </button>
+          ) : (
+            <button
+              className="bg-gray-500 text-gray-50 font-semibold p-2 rounded-md my-2"
+              disabled
+            >
+              Claim Certificate
+            </button>
+          )
         ) : (
           <p className="text-red-400 py-2">
             Minting is currently disabled. Please wait for admin approval.
