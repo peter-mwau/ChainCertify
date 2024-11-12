@@ -7,6 +7,7 @@ import Reports from "../components/Reports";
 import Settings from "../components/Settings";
 import Overview from "../components/Overview";
 import ManageProjects from "../components/ManageProjects";
+import ManageCertificates from "../components/ManageCertificates";
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("overview");
@@ -26,6 +27,8 @@ const AdminDashboard = () => {
         return <ManageQuizzes />;
       case "manage-projects":
         return <ManageProjects />;
+      case "manage-certificates":
+        return <ManageCertificates />;
       case "reports":
         return <Reports />;
       case "settings":
@@ -113,6 +116,16 @@ const AdminDashboard = () => {
               onClick={() => setActiveSection("manage-projects")}
             >
               Manage Projects
+            </li>
+            <li
+              className={`p-4 cursor-pointer text-gray-800 dark:text-gray-200 ${
+                activeSection === "manage-certificates"
+                  ? "bg-gray-100 text-gray-700 font-semibold dark:bg-cyan-700"
+                  : "hover:bg-gray-100 hover:text-gray-800 hover:font-semibold hover:dark:bg-cyan-900"
+              }`}
+              onClick={() => setActiveSection("manage-certificates")}
+            >
+              Manage Certificates
             </li>
             <li
               className={`p-4 cursor-pointer text-gray-800 dark:text-gray-200 ${

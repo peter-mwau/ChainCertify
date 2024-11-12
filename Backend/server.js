@@ -1057,6 +1057,59 @@ app.post('/api/quizzes/:quizId/attempts', async (req, res) => {
     }
 });
 
+//CERTIFICATES SECTION
+app.post("/api/toggle-mint-status", async (req, res) => {
+    try {
+        // Fetch the existing status or create it if it doesn't exist
+        let mintStatus = await prisma.certificateMintStatus.findFirst();
+
+        if (mintStatus) {
+            // Update the existing minting status
+            mintStatus = await prisma.certificateMintStatus.update({
+                where: { id: mintStatus.id },
+                data: { allowed: !mintStatus.allowed },
+            });
+        } else {
+            // Create a new minting status entry
+            mintStatus = await prisma.certificateMintStatus.create({
+                data: { allowed: true },
+            });
+        }
+
+        res.json({
+            message: "Certificate minting status updated successfully.",
+            status: mintStatus.allowed,
+        });
+    } catch (error) {
+        console.error("Error toggling minting status:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Endpoint to get the current certificate minting status
+app.get("/api/mint-status", async (req, res) => {
+    try {
+        const mintStatus = await prisma.certificateMintStatus.findFirst();
+
+        if (mintStatus) {
+            // Send the entire mintStatus object
+            res.json(mintStatus);
+        } else {
+            // If no entry exists, return a default response
+            res.json({
+                id: null,
+                allowed: false,
+                updatedAt: null
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching minting status:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
 
 
 const PORT = process.env.PORT || 8000;

@@ -125,3 +125,9 @@ model Grading {
   project      Project?      @relation(fields: [projectId], references: [id], map: "Project__Grading")
   projectId    Int?
 }
+
+model CertificateMintStatus {
+  id           Int       @id @default(autoincrement())
+  allowed      Boolean   @default(false) // Global flag for certificate minting
+  updatedAt    DateTime  @updatedAt // Track last update for auditing
+}

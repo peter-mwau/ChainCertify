@@ -1,12 +1,14 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { UserContext } from "../contexts/userContext";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useAuth } from "../contexts/authContext";
 
 const Reports = () => {
   const { user } = useContext(UserContext);
-  const { isLoggedIn } = useAuth(); // Corrected variable name
+  const { isLoggedIn } = useAuth();
+  const { api } = useAuth();
+  const [mintAllowed, setMintAllowed] = useState(null);
 
   const BASE_URL = "http://127.0.0.1:8080";
 
@@ -77,8 +79,35 @@ const Reports = () => {
     doc.save(`${user.name}_Report.pdf`);
   };
 
+  // Fetch minting status from the backend
+  useEffect(() => {
+    const fetchMintStatus = async () => {
+      try {
+        const response = await api.get("/api/mint-status");
+        setMintAllowed(response.data.allowed);
+        console.log("Allowed:", response.data.allowed);
+        console.log("All: ", mintAllowed);
+      } catch (error) {
+        console.error("Error fetching minting status:", error);
+      }
+    };
+
+    fetchMintStatus();
+  }, []);
+
   return (
     <div className="container mx-auto p-4 transition-all duration-1000 w-full md:w-[70%] md:mx-auto md:ml-[240px] lg:w-[60%] lg:mx-auto">
+      <div className="mx-auto right-0 flex items-end justify-end">
+        {mintAllowed ? (
+          <button className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500">
+            Claim Certificate
+          </button>
+        ) : (
+          <p className="text-red-400 py-2">
+            Minting is currently disabled. Please wait for admin approval.
+          </p>
+        )}
+      </div>
       {isLoggedIn && user?.role === "STUDENT" ? (
         <div className="bg-white dark:bg-cyan-900 shadow-md rounded-lg p-6 w-full">
           <h2 className="text-2xl font-bold mb-4 text-center">
