@@ -174,9 +174,9 @@ VITE_API_URL="http://localhost:8080"
 
 1. **`Certificate Minting as NFTs`**: When a student completes a course, ChainCertify mints a unique ERC721 token, or NFT, on the Skale Network. This certificate includes essential details, such as the student’s name, course title, and issue date. Minting the certificate as an NFT provides an official and verifiable record of completion.
 
-2. `**Revocation and Certificate Updates**`: If needed, certificates can be revoked by burning the NFT, ensuring only valid and up-to-date certificates remain accessible on the blockchain. Additionally, the flexibility of the NFT standard allows ChainCertify to implement future upgrades, such as metadata updates, if policies or course information evolve.
+2. **`Revocation and Certificate Updates`**: If needed, certificates can be revoked by burning the NFT, ensuring only valid and up-to-date certificates remain accessible on the blockchain. Additionally, the flexibility of the NFT standard allows ChainCertify to implement future upgrades, such as metadata updates, if policies or course information evolve.
 
-3. `**Permanent, Verifiable Storage**`: All minted certificates are stored on the Skale blockchain, providing a decentralized, transparent ledger that anyone can access for verification purposes. This is especially beneficial for employers or third parties who may wish to validate an individual's qualifications without relying on centralized systems.
+3. **`Permanent, Verifiable Storage`**: All minted certificates are stored on the Skale blockchain, providing a decentralized, transparent ledger that anyone can access for verification purposes. This is especially beneficial for employers or third parties who may wish to validate an individual's qualifications without relying on centralized systems.
 
 ## Project Importance, Scope, and Future Improvements
 
