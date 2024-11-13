@@ -190,21 +190,21 @@ VITE_API_URL="http://localhost:8080"
 
 ## Planned Benefits of the SaaS Model:
 
-- `**Ease of Integration**`: Institutions can connect their LMS to ChainCertify via a subscription, providing access to assignment and grading workflows, as well as blockchain certificate issuance.
-- `**Cost-Effectiveness**`: The SaaS model reduces development costs for institutions by allowing them to utilize ChainCertify’s platform without incurring extensive internal development expenses.
-- `**Customizable Subscriptions**`: Institutions can select from various subscription levels based on their needs, allowing them to scale usage and features as they grow.
-- `**Continuous Updates and Improvements**`: With ChainCertify as a SaaS, institutions automatically benefit from platform updates and new features, ensuring they always have access to the latest advancements in assignment management and certificate issuance.
+- **`Ease of Integration`**: Institutions can connect their LMS to ChainCertify via a subscription, providing access to assignment and grading workflows, as well as blockchain certificate issuance.
+- **`Cost-Effectiveness`**: The SaaS model reduces development costs for institutions by allowing them to utilize ChainCertify’s platform without incurring extensive internal development expenses.
+- **`Customizable Subscriptions`**: Institutions can select from various subscription levels based on their needs, allowing them to scale usage and features as they grow.
+- **`Continuous Updates and Improvements`**: With ChainCertify as a SaaS, institutions automatically benefit from platform updates and new features, ensuring they always have access to the latest advancements in assignment management and certificate issuance.
 
 ## Project Scope and Future Enhancements
 
 - ChainCertify envisions expanding beyond simple assignment and grading functionalities into a comprehensive academic management system. Potential future enhancements include:
 
-- `**AI-Powered Grading Assistance**`: Implementing AI to assist instructors in grading assignments, saving time and ensuring grading consistency.
-- `**Cross-Institution Certification Network**`: By expanding ChainCertify’s user base, multiple institutions could join a single, unified platform, where students can access, share, and verify certificates across institutions seamlessly.
-- `**Broader Skill and Credential Verification**`: Beyond academia, ChainCertify can extend to professional certifications, skill verification for corporate training, and other credentials, establishing a secure standard for lifelong learning and career development.
-- `**Enhanced Data Analytics**`: Providing institutions with insights and analytics on student performance, engagement, and learning progress, aiding in curriculum development and personalized education.
-- `**Mobile and Offline Capabilities**`: Development of a mobile application and offline features to ensure accessibility in regions with limited internet connectivity.
-- `**Multi-Network Support**`: In the future, ChainCertify could support other blockchain networks, allowing institutions the flexibility to choose a network that aligns with their needs.
+- **`AI-Powered Grading Assistance`**: Implementing AI to assist instructors in grading assignments, saving time and ensuring grading consistency.
+- **`Cross-Institution Certification Network`**: By expanding ChainCertify’s user base, multiple institutions could join a single, unified platform, where students can access, share, and verify certificates across institutions seamlessly.
+- **`Broader Skill and Credential Verification`**: Beyond academia, ChainCertify can extend to professional certifications, skill verification for corporate training, and other credentials, establishing a secure standard for lifelong learning and career development.
+- **`Enhanced Data Analytics`**: Providing institutions with insights and analytics on student performance, engagement, and learning progress, aiding in curriculum development and personalized education.
+- **`Mobile and Offline Capabilities`**: Development of a mobile application and offline features to ensure accessibility in regions with limited internet connectivity.
+- **`Multi-Network Support`**: In the future, ChainCertify could support other blockchain networks, allowing institutions the flexibility to choose a network that aligns with their needs.
 
 ## Docker Support
 
