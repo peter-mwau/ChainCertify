@@ -115,7 +115,7 @@ const Contact = () => {
                       ></path>
                     </svg>
                     <h5 className="text-black text-base font-normal leading-6 ml-5">
-                      470-601-1911
+                      +254 712134108
                     </h5>
                   </a>
                   <a href="javascript:;" className="flex items-center mb-6">
@@ -134,7 +134,7 @@ const Contact = () => {
                       ></path>
                     </svg>
                     <h5 className="text-black text-base font-normal leading-6 ml-5">
-                      assigntrack@gmail.com
+                      chaincertify@gmail.com
                     </h5>
                   </a>
                   <a href="javascript:;" className="flex items-center mb-6">

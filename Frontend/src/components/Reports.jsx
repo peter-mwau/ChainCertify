@@ -3,6 +3,14 @@ import autoTable from "jspdf-autotable";
 import { UserContext } from "../contexts/userContext";
 import { useContext, useState, useEffect } from "react";
 import { useAuth } from "../contexts/authContext";
+import { useNavigate } from "react-router-dom";
+import { ethers } from "ethers";
+import ABI from "../artifacts/contracts/ChainCertifyNFT.sol/ChainCertifyNFT.json";
+import { useDisconnect, useAccount } from "wagmi";
+import { useEthersSigner } from "../components/useEtherSign";
+
+const contractAddress = import.meta.env.VITE_APP_CONTRACT_ADDRESS;
+const contractABI = ABI.abi;
 
 const Reports = () => {
   const { user } = useContext(UserContext);
@@ -10,6 +18,10 @@ const Reports = () => {
   const { api } = useAuth();
   const [mintAllowed, setMintAllowed] = useState(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const { isConnected, address } = useAccount();
+  const { disconnect } = useDisconnect();
+  const signerPromise = useEthersSigner();
+  const navigate = useNavigate();
 
   const handleClosePopup = () => {
     setShowCongratsPopup(false);
@@ -19,8 +31,6 @@ const Reports = () => {
     console.log("Opening popup...");
     setShowCongratsPopup(true);
   };
-
-  console.log("Popup: ", showCongratsPopup);
 
   const BASE_URL = "http://127.0.0.1:8080";
 
@@ -107,31 +117,196 @@ const Reports = () => {
     fetchMintStatus();
   }, []);
 
+  const handleClaimCertificate = async () => {
+    if (!isConnected) {
+      alert("Please connect your wallet to mint the certificate.");
+      return;
+    }
+
+    try {
+      // Get the signer
+      const signer = await signerPromise;
+      if (!signer) {
+        throw new Error("No signer available. Please connect your wallet.");
+      }
+
+      // Log contract details for debugging
+      console.log("Contract Address:", contractAddress);
+      console.log("User Address:", address);
+      console.log("Token ID:", user.id);
+
+      // Create a contract instance using the signer
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      console.log("Contract: ", contract);
+
+      // Verify contract interface
+      const functions = Object.keys(contract.interface.functions);
+      console.log("Available contract functions:", functions);
+
+      if (!contract.interface.functions["mintNFT"]) {
+        throw new Error("mintNFT function not found in contract ABI");
+      }
+
+      // Define certificate details and tokenId
+      const tokenId = user.id;
+      const _names = user.name;
+      const _institution = "ABYA UNIVERSITY";
+      const _courseName = "Introduction to Blockchain";
+      const _issueDate = new Date().toISOString().split("T")[0];
+
+      // Log transaction parameters
+      console.log("Minting Parameters:", {
+        address,
+        tokenId,
+        _names,
+        _institution,
+        _courseName,
+        _issueDate,
+      });
+
+      // Get the actual function signature from the ABI
+      const mintFunction = contract.interface.functions["mintNFT"];
+      console.log("Mint function signature:", mintFunction.format());
+
+      // Estimate gas before transaction
+      try {
+        const gasEstimate = await contract.estimateGas.mintNFT(
+          address,
+          tokenId,
+          _names,
+          _institution,
+          _courseName,
+          _issueDate
+        );
+        console.log("Estimated Gas:", gasEstimate.toString());
+      } catch (gasError) {
+        console.error("Gas Estimation Error:", gasError);
+        throw new Error(
+          "Failed to estimate gas. The transaction might fail: " +
+            gasError.message
+        );
+      }
+
+      // Call the mintNFT function with explicit gas limit
+      const tx = await contract.mintNFT(
+        address,
+        tokenId,
+        _names,
+        _institution,
+        _courseName,
+        _issueDate
+        // {
+        //   gasLimit: 500000, // Adjust this value based on your gas estimation
+        // }
+      );
+
+      console.log("Transaction Hash:", tx.hash);
+
+      const receipt = await tx.wait();
+      console.log("Transaction Receipt:", receipt);
+
+      const event = receipt.events?.find(
+        (event) => event.event === "CertificateMinted"
+      );
+
+      if (!event) {
+        throw new Error(
+          "CertificateMinted event not found in transaction receipt"
+        );
+      }
+
+      const certID = event.args.certID;
+      console.log("Certificate ID:", certID);
+
+      // Make a POST request to save the certificate details
+      const apiResponse = await api.post("/api/certificates", {
+        to: address,
+        tokenId,
+        institution: _institution,
+        courseName: _courseName,
+        issueDate: _issueDate,
+        userId: user.id,
+      });
+
+      console.log("API Response:", apiResponse);
+
+      setTimeout(() => {
+        navigate("/certificate", {
+          state: {
+            to: address,
+            tokenId: user.id,
+            names: _names,
+            institution: _institution,
+            courseName: _courseName,
+            issueDate: _issueDate,
+            userId: user.id,
+            certID: certID,
+          },
+        });
+      }, 2000);
+
+      handleClosePopup();
+    } catch (error) {
+      console.error("Error Details:", {
+        message: error.message,
+        code: error.code,
+        data: error.data,
+        transaction: error.transaction,
+        receipt: error.receipt,
+      });
+
+      // Handle specific error cases
+      let errorMessage = "An error occurred while minting the certificate.";
+
+      if (error.code === "ACTION_REJECTED") {
+        errorMessage = "Transaction was rejected by the user.";
+      } else if (error.code === "INSUFFICIENT_FUNDS") {
+        errorMessage = "Insufficient funds to complete the transaction.";
+      } else if (error.message.includes("gas")) {
+        errorMessage =
+          "Transaction failed due to gas estimation. Please try again with a higher gas limit.";
+      } else if (error.message.includes("nonce")) {
+        errorMessage =
+          "Transaction nonce error. Please reset your wallet's transaction history.";
+      }
+
+      alert(errorMessage);
+      throw error; // Re-throw for debugging purposes
+    }
+  };
+
   return (
     <>
       <div className="container mx-auto p-4 transition-all duration-1000 w-full md:w-[70%] md:mx-auto md:ml-[240px] lg:w-[60%] lg:mx-auto">
         <div className="mx-auto right-0 flex items-end justify-end">
-          {mintAllowed ? (
-            user.grading[0].grade >= 80 ? (
-              <button
-                onClick={handleOpenPopup}
-                className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500"
-              >
-                Claim Certificate
-              </button>
+          {isLoggedIn ? (
+            mintAllowed ? (
+              user?.grading[0]?.grade >= 80 ? (
+                <button
+                  onClick={handleOpenPopup}
+                  className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500"
+                >
+                  Claim Certificate
+                </button>
+              ) : (
+                <button
+                  className="bg-gray-500 text-gray-50 font-semibold p-2 rounded-md my-2"
+                  disabled
+                >
+                  Claim Certificate
+                </button>
+              )
             ) : (
-              <button
-                className="bg-gray-500 text-gray-50 font-semibold p-2 rounded-md my-2"
-                disabled
-              >
-                Claim Certificate
-              </button>
+              <p className="text-red-400 py-2">
+                Minting is currently disabled. Please wait for admin approval.
+              </p>
             )
-          ) : (
-            <p className="text-red-400 py-2">
-              Minting is currently disabled. Please wait for admin approval.
-            </p>
-          )}
+          ) : null}
         </div>
         {isLoggedIn && user?.role === "STUDENT" ? (
           <div className="bg-white dark:bg-cyan-900 shadow-md rounded-lg p-6 w-full">
@@ -322,7 +497,7 @@ const Reports = () => {
             </p>
             <div className="flex mx-auto space-x-2 mt-[120px] items-center justify-center">
               <button
-                // onClick={handleClaimCertificate}
+                onClick={handleClaimCertificate}
                 id="generateCertificate"
                 class="bg-yellow-500 text-white rounded-lg px-4 py-2 mt-4 hover:bg-yellow-400"
               >

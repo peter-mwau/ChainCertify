@@ -93,7 +93,7 @@ const Projects = () => {
             <button
               className={`py-2 px-4 rounded ${
                 activeTab === "add"
-                  ? "bg-cyan-950 dark:bg-yellow-500 text-white"
+                  ? "bg-cyan-950 dark:bg-yellow-500 text-white font-semibold"
                   : "bg-gray-200 dark:shadow-white shadow-md dark:text-gray-900"
               }`}
               onClick={() => setActiveTab("add")}
@@ -103,7 +103,7 @@ const Projects = () => {
             <button
               className={`py-2 px-4 rounded ${
                 activeTab === "submissions"
-                  ? "bg-cyan-950 dark:bg-yellow-500 text-white"
+                  ? "bg-cyan-950 dark:bg-yellow-500 text-white font-semibold"
                   : "bg-gray-200 dark:shadow-white shadow-md dark:text-gray-900"
               }`}
               onClick={() => setActiveTab("submissions")}
@@ -205,46 +205,49 @@ const Projects = () => {
               </h3>
               {loading ? (
                 <p>Loading submitted projects...</p>
-              ) : submittedProjects.length > 0 ? (
+              ) : (
                 <ul className="space-y-4">
-                  {submittedProjects
-                    .filter((project) => project.user.id === user.id)
-                    .map((project) => (
-                      <li
-                        key={project.id}
-                        className="border p-4 rounded shadow-md dark:shadow-white shadow-cyan-950"
-                      >
-                        <p className="text-end text-sm text-gray-800 dark:text-gray-300 italic">
-                          {project.user.name}
-                        </p>
-                        <h4 className="font-semibold text-lg">
-                          Title: {project.title}
-                        </h4>
-                        <p>Description: {project.description}</p>
-                        <a
-                          href={project.githubLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-cyan-950 hover:underline"
+                  {submittedProjects.filter(
+                    (project) => project.user.id === user.id
+                  ).length > 0 ? (
+                    submittedProjects
+                      .filter((project) => project.user.id === user.id)
+                      .map((project) => (
+                        <li
+                          key={project.id}
+                          className="border p-4 rounded shadow-md dark:shadow-white shadow-cyan-950"
                         >
-                          View on GitHub
-                        </a>
-                        <div className="grid grid-cols-2 gap-2 mt-4">
-                          {project.projectImages.map((image, index) => (
+                          <p className="text-end text-sm text-gray-800 dark:text-gray-300 italic">
+                            {project.user.name}
+                          </p>
+                          <h4 className="font-semibold text-lg">
+                            Title: {project.title}
+                          </h4>
+                          <p>Description: {project.description}</p>
+                          <a
+                            href={project.githubLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-950 hover:underline dark:text-yellow-500"
+                          >
+                            View on GitHub
+                          </a>
+                          <div className="grid grid-cols-2 gap-2 mt-4">
                             <img
-                              key={index}
-                              src={`${BASE_URL}/uploads/${image}`}
-                              alt={`Project ${index + 1}`}
+                              src={`${BASE_URL}/uploads/projects/${project.projectImages}`}
+                              alt="Project image"
                               className="rounded-md"
                               loading="lazy"
                             />
-                          ))}
-                        </div>
-                      </li>
-                    ))}
+                          </div>
+                        </li>
+                      ))
+                  ) : (
+                    <p className="text-start text-red-500 mx-auto justify-start flex italic">
+                      No submitted projects found!!
+                    </p>
+                  )}
                 </ul>
-              ) : (
-                <p>No submitted projects found.</p>
               )}
             </div>
           )}

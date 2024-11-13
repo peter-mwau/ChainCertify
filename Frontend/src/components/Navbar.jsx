@@ -135,10 +135,10 @@ const Navbar = () => {
 
         <div>
           <ConnectButton
-            accountStatus={{
-              smallScreen: "avatar",
-              largeScreen: "full",
-            }}
+          // accountStatus={{
+          //   smallScreen: "avatar",
+          //   largeScreen: "full",
+          // }}
           />
         </div>
 

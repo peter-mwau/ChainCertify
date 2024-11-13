@@ -1108,7 +1108,42 @@ app.get("/api/mint-status", async (req, res) => {
     }
 });
 
+// POST endpoint to save certificate details
+app.post('/api/certificates', async (req, res) => {
+    const { to, tokenId, names, institution, courseName, issueDate, userId } = req.body;
 
+    if (!to || !tokenId || !names || !institution || !courseName || !issueDate || !userId) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+
+    try {
+        const newCertificate = await prisma.certificate.create({
+            data: {
+                to,
+                tokenId,
+                institution,
+                courseName,
+                issueDate: new Date(issueDate),
+                userId
+            }
+        });
+        res.status(201).json(newCertificate);
+    } catch (error) {
+        console.error("Error creating certificate:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// GET endpoint to retrieve all certificate details
+app.get('/api/certificates', async (req, res) => {
+    try {
+        const certificates = await prisma.certificate.findMany();
+        res.json(certificates);
+    } catch (error) {
+        console.error("Error fetching certificates:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 
 

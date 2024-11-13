@@ -20,7 +20,7 @@ contract ChainCertifyNFT is ERC721, Ownable {
 
     mapping(uint256 => CertificateNFT) public certificateDetails;
 
-    event CertificateMinted(uint256 tokenId, address recipient);
+    event CertificateMinted(uint256 tokenId, address recipient, bytes32 _certID);
     event CertificateRevoked(uint256 tokenId);
 
     constructor(uint256 _MAX_SUPPLY, string memory _baseURL) ERC721("Institution Name", "ITKN") Ownable(msg.sender) {
@@ -56,7 +56,7 @@ contract ChainCertifyNFT is ERC721, Ownable {
         _safeMint(to, tokenId);
         totalSupply++;
 
-        emit CertificateMinted(tokenId, to);
+        emit CertificateMinted(tokenId, to,certID);
         return true;
     }
 

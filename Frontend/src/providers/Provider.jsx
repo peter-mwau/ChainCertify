@@ -28,7 +28,6 @@ export default function Providers({ children }) {
     appName: "My RainbowKit App",
     projectId: "1e91e33eb8db73af7f34de8d02fb03f1",
     chains: [sepolia, mainnet, skaleTitanTestnet],
-    ssr: false,
   });
 
   const queryClient = new QueryClient();
@@ -92,7 +91,9 @@ export default function Providers({ children }) {
   useEffect(() => {
     // Poll every 30 seconds for updates
     const pollInterval = setInterval(() => {
+      console.log("Polling started");
       refreshAllData();
+      console.log("Polling ended");
     }, 30000);
 
     // Clean up interval on unmount
@@ -152,7 +153,7 @@ export default function Providers({ children }) {
               refreshAssignments: fetchAssignments,
             }}
           >
-            <WagmiProvider config={config}>
+            <WagmiProvider autoConnect config={config}>
               <QueryClientProvider client={queryClient}>
                 <RainbowKitProvider
                   theme={lightTheme({
