@@ -39,7 +39,7 @@ const GradingModal = ({ isOpen, onClose, submission }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white dark:bg-blue-800 dark:bg-opacity-80 rounded-lg p-6 w-11/12 md:w-1/3">
+      <div className="bg-white dark:bg-cyan-700 dark:bg-opacity-80 rounded-lg p-6 w-11/12 md:w-1/3">
         <h2 className="text-2xl font-semibold mb-4 dark:text-gray-200">
           Grade Submission
         </h2>
@@ -97,7 +97,7 @@ const GradingModal = ({ isOpen, onClose, submission }) => {
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg mr-2"
+              className="bg-gray-300 dark:bg-gray-500 text-gray-800 font-semibold dark:text-gray-200 px-4 py-2 rounded-lg mr-2"
             >
               Cancel
             </button>
