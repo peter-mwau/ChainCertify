@@ -6,8 +6,7 @@ import { useAuth } from "../contexts/authContext";
 import { UserContext } from "../contexts/userContext";
 import { DarkModeContext } from "../contexts/themeContext";
 import { MdOutlineLightMode } from "react-icons/md";
-// import { useEthersSigner } from "../components/useClientSigner";
-import { useDisconnect, useAccount } from "wagmi";
+import { useDisconnect, useAccount, useBalance, useConnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const Navbar = () => {
@@ -16,8 +15,11 @@ const Navbar = () => {
   const [openProfile, setIsOpenProfile] = useState(false);
   const { isLoggedIn, logout, user } = useAuth();
   const { loading } = useContext(UserContext);
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { data: balanceData } = useBalance({ address });
+  const { connect, connectors } = useConnect();
+  const [tokenSymbol, setTokenSymbol] = useState("");
 
   useEffect(() => {
     if (isDarkMode) {
@@ -35,30 +37,21 @@ const Navbar = () => {
     return <div>Loading...</div>;
   }
 
-  // Default values
   const defaultProfileImage = "/Africa1.jpg";
   const profileImage = user?.profileImage
     ? new URL(user.profileImage, import.meta.env.VITE_API_BASE_URL).toString()
     : defaultProfileImage;
   const username = user?.name || "Guest";
-  const userRole = user?.role || "guest"; // Assuming role is part of the user object
-
-  console.log("Profile Image URL:", profileImage);
+  const userRole = user?.role || "guest";
 
   return (
     <header className="w-full z-10 lg:mx-auto lg:items-center lg:justify-center transition-all duration-1000 bg-white dark:bg-cyan-900 fixed dark:shadow-red-500 dark:shadow-sm border-b border-yellow-500">
       <div className="container mx-auto flex items-center justify-between h-full p-3 dark:text-white">
-        {/* Logo */}
         <Link to="/">
           <div className="flex text-2xl uppercase font-extrabold space-x-2">
-            {isDarkMode ? (
-              <img className="w-10" src="/Africa1.jpg" />
-            ) : (
-              <img className="w-10" src="/Africa1.jpg" />
-            )}
+            <img className="w-10" src="/Africa1.jpg" />
           </div>
         </Link>
-        {/* Navigation Links */}
         <div className="hidden lg:flex gap-6 md:flex">
           <ul className="flex gap-6">
             <li>
@@ -69,7 +62,6 @@ const Navbar = () => {
                 Home
               </Link>
             </li>
-
             <li>
               <Link
                 to="/contact"
@@ -121,7 +113,6 @@ const Navbar = () => {
             )}
           </ul>
         </div>
-        {/* Dark Mode Toggle */}
         <button onClick={toggleDarkMode} className="ml-10">
           {isDarkMode ? (
             <MdOutlineLightMode
@@ -132,75 +123,9 @@ const Navbar = () => {
             <MdDarkMode className="text-2xl font-bold w-[70px] stroke-3" />
           )}
         </button>
-
         <div>
-          <ConnectButton
-          // accountStatus={{
-          //   smallScreen: "avatar",
-          //   largeScreen: "full",
-          // }}
-          />
+          <ConnectButton />
         </div>
-
-        {/* Mobile Dropdown Menu */}
-        <div
-          className={`flex flex-col items-center space-y-2 absolute top-[75px] left-0 right-0 mx-auto z-10 bg-gray-100 dark:bg-blue-950 dark:bg-opacity-80 dark:text-white p-2 transition-all duration-500 lg:hidden ${
-            openDropdown ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
-          } overflow-hidden`}
-        >
-          <Link
-            to="/"
-            className="text-md font-semibold text-cyan-950 dark:text-white"
-            onClick={() => {
-              setIsOpenDropdown(false);
-            }}
-          >
-            Home
-          </Link>
-          <Link
-            to="/contact"
-            className="text-md font-semibold text-cyan-950 dark:text-white"
-            onClick={() => {
-              setIsOpenDropdown(false);
-            }}
-          >
-            Contacts
-          </Link>
-          {isLoggedIn && userRole === "ADMIN" && (
-            <Link
-              to="/adminPage"
-              className="font-semibold text-cyan-950 dark:text-white hover:underline"
-              onClick={() => {
-                setIsOpenDropdown(false);
-              }}
-            >
-              Admin
-            </Link>
-          )}
-          {isLoggedIn ? (
-            <Link
-              className="text-md font-semibold text-red-500 dark:text-red-500"
-              onClick={() => {
-                logout();
-                setIsOpenDropdown(false);
-              }}
-            >
-              Logout
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              className="text-md font-semibold text-cyan-950 dark:text-white"
-              onClick={() => {
-                setIsOpenDropdown(false);
-              }}
-            >
-              Login
-            </Link>
-          )}
-        </div>
-
-        {/* Dropdown menu */}
         <div className="hidden lg:block">
           <div className="relative">
             <button
@@ -218,63 +143,151 @@ const Navbar = () => {
               />
             </button>
             <div
-              className={`flex flex-col items-center space-y-2 absolute top-[60px] right-0 z-10 bg-gray-400 dark:bg-black dark:bg-opacity-80 dark:text-white p-2 transition-all duration-500 ${
-                openProfile
-                  ? "max-h-auto opacity-100 w-[150px] rounded-md"
-                  : "max-h-0 opacity-0"
-              } overflow-hidden`}
+              className={`absolute right-0 mt-2 w-48 bg-white dark:bg-black dark:bg-opacity-80 dark:text-white rounded-lg shadow-lg transition-all duration-500 ${
+                openProfile ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
             >
-              {isLoggedIn ? (
-                <div>
+              <div className="p-4">
+                {isLoggedIn ? (
+                  <div>
+                    <p className="text-gray-500 pb-2 dark:text-yellow-400">
+                      @{username}
+                    </p>
+                    <hr />
+                  </div>
+                ) : (
                   <p className="text-gray-500 pb-2 dark:text-yellow-400">
-                    @{username}
+                    Guest
                   </p>
-                  <hr />
-                </div>
-              ) : (
-                <p className="text-gray-500 pb-2 dark:text-yellow-400">Guest</p>
-              )}
-              <Link
-                to="/"
-                className="text-md font-semibold text-cyan-950 dark:text-white"
-                onClick={() => setIsOpenProfile(false)}
-              >
-                Profile
-              </Link>
-              <Link
-                to="/about"
-                className="text-md font-semibold text-cyan-950 dark:text-white"
-                onClick={() => setIsOpenProfile(false)}
-              >
-                Settings
-              </Link>
-              {isLoggedIn ? (
+                )}
                 <Link
-                  className="text-md font-semibold text-red-600"
-                  onClick={logout}
-                >
-                  Logout
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="text-md font-semibold text-cyan-950 dark:text-green-600"
+                  to="/"
+                  className="block text-md font-semibold text-cyan-950 dark:text-white py-1"
                   onClick={() => setIsOpenProfile(false)}
                 >
-                  Login
+                  Profile
                 </Link>
-              )}
+                <Link
+                  to="/about"
+                  className="block text-md font-semibold text-cyan-950 dark:text-white py-1"
+                  onClick={() => setIsOpenProfile(false)}
+                >
+                  Settings
+                </Link>
+                {isLoggedIn ? (
+                  <Link
+                    className="block text-md font-semibold text-red-600 py-1"
+                    onClick={logout}
+                  >
+                    Logout
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="block text-md font-semibold text-cyan-950 dark:text-green-600 py-1"
+                    onClick={() => setIsOpenProfile(false)}
+                  >
+                    Login
+                  </Link>
+                )}
+                <div className="mt-2">
+                  <p className="mb-2">
+                    Status:{" "}
+                    <span
+                      className={
+                        isConnected
+                          ? "text-green-500 font-semibold"
+                          : "text-red-500"
+                      }
+                    >
+                      {isConnected ? "Connected" : "Disconnected"}
+                    </span>
+                  </p>
+                  <p className="mb-2">
+                    Address:{" "}
+                    <span className="block w-full break-words bg-gray-100 p-2 rounded-md">
+                      {address}
+                    </span>
+                  </p>
+                  <p className="mb-2">
+                    Balance:{" "}
+                    <span className="font-semibold">
+                      {balanceData?.formatted} {balanceData?.symbol}
+                    </span>
+                  </p>
+                  <p
+                    onClick={disconnect}
+                    className="mb-2 text-red-500 hover:text-red-600 hover:underline hover:cursor-pointer"
+                  >
+                    Disconnect
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Hamburger Menu */}
         <button
           onClick={() => setIsOpenDropdown(!openDropdown)}
           className="lg:hidden"
         >
           <HiMiniBars3 className="text-3xl font-bold" />
         </button>
+      </div>
+      <div
+        className={`flex flex-col items-center space-y-2 absolute top-[75px] left-0 right-0 mx-auto z-10 bg-gray-100 dark:bg-blue-950 dark:bg-opacity-80 dark:text-white p-2 transition-all duration-500 lg:hidden ${
+          openDropdown ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
+        <Link
+          to="/"
+          className="text-md font-semibold text-cyan-950 dark:text-white"
+          onClick={() => {
+            setIsOpenDropdown(false);
+          }}
+        >
+          Home
+        </Link>
+        <Link
+          to="/contact"
+          className="text-md font-semibold text-cyan-950 dark:text-white"
+          onClick={() => {
+            setIsOpenDropdown(false);
+          }}
+        >
+          Contacts
+        </Link>
+        {isLoggedIn && userRole === "ADMIN" && (
+          <Link
+            to="/adminPage"
+            className="font-semibold text-cyan-950 dark:text-white hover:underline"
+            onClick={() => {
+              setIsOpenDropdown(false);
+            }}
+          >
+            Admin
+          </Link>
+        )}
+        {isLoggedIn ? (
+          <Link
+            className="text-md font-semibold text-red-500 dark:text-red-500"
+            onClick={() => {
+              logout();
+              setIsOpenDropdown(false);
+            }}
+          >
+            Logout
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="text-md font-semibold text-cyan-950 dark:text-white"
+            onClick={() => {
+              setIsOpenDropdown(false);
+            }}
+          >
+            Login
+          </Link>
+        )}
       </div>
     </header>
   );

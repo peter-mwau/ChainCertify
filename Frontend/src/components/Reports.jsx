@@ -142,16 +142,6 @@ const Reports = () => {
         signer
       );
 
-      console.log("Contract: ", contract);
-
-      // Verify contract interface
-      const functions = Object.keys(contract.interface.functions);
-      console.log("Available contract functions:", functions);
-
-      if (!contract.interface.functions["mintNFT"]) {
-        throw new Error("mintNFT function not found in contract ABI");
-      }
-
       // Define certificate details and tokenId
       const tokenId = user.id;
       const _names = user.name;

@@ -28,6 +28,7 @@ export default function Providers({ children }) {
     appName: "My RainbowKit App",
     projectId: "1e91e33eb8db73af7f34de8d02fb03f1",
     chains: [sepolia, mainnet, skaleTitanTestnet],
+    autoConnect: true,
   });
 
   const queryClient = new QueryClient();
