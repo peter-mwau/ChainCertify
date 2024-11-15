@@ -6,8 +6,7 @@ import { useAuth } from "../contexts/authContext";
 import { UserContext } from "../contexts/userContext";
 import { DarkModeContext } from "../contexts/themeContext";
 import { MdOutlineLightMode } from "react-icons/md";
-import { useDisconnect, useAccount, useBalance, useConnect } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import WalletContext from "../contexts/walletContext";
 
 const Navbar = () => {
   const { isDarkMode, setIsDarkMode } = useContext(DarkModeContext);
@@ -15,11 +14,13 @@ const Navbar = () => {
   const [openProfile, setIsOpenProfile] = useState(false);
   const { isLoggedIn, logout, user } = useAuth();
   const { loading } = useContext(UserContext);
-  const { isConnected, address } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { data: balanceData } = useBalance({ address });
-  const { connect, connectors } = useConnect();
-  const [tokenSymbol, setTokenSymbol] = useState("");
+  const {
+    isWalletConnected,
+    connectWallet,
+    disconnectWallet,
+    account,
+    balance,
+  } = useContext(WalletContext);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -124,7 +125,21 @@ const Navbar = () => {
           )}
         </button>
         <div>
-          <ConnectButton />
+          {!isWalletConnected ? (
+            <button
+              onClick={connectWallet}
+              className="bg-cyan-950 text-white font-semibold p-2 rounded-md"
+            >
+              Connect Wallet
+            </button>
+          ) : (
+            <button
+              onClick={disconnectWallet}
+              className="bg-red-500 text-white font-semibold p-2 rounded-lg"
+            >
+              Disconnect
+            </button>
+          )}
         </div>
         <div className="hidden lg:block">
           <div className="relative">
@@ -195,32 +210,38 @@ const Navbar = () => {
                     Status:{" "}
                     <span
                       className={
-                        isConnected
+                        isWalletConnected
                           ? "text-green-500 font-semibold"
                           : "text-red-500"
                       }
                     >
-                      {isConnected ? "Connected" : "Disconnected"}
+                      {isWalletConnected ? "Connected" : "Disconnected"}
                     </span>
                   </p>
                   <p className="mb-2">
                     Address:{" "}
                     <span className="block w-full break-words bg-gray-100 p-2 rounded-md">
-                      {address}
+                      {account}
                     </span>
                   </p>
                   <p className="mb-2">
-                    Balance:{" "}
-                    <span className="font-semibold">
-                      {balanceData?.formatted} {balanceData?.symbol}
-                    </span>
+                    Balance: <span className="font-semibold">{balance}</span>
                   </p>
-                  <p
-                    onClick={disconnect}
-                    className="mb-2 text-red-500 hover:text-red-600 hover:underline hover:cursor-pointer"
-                  >
-                    Disconnect
-                  </p>
+                  {isWalletConnected ? (
+                    <p
+                      onClick={disconnectWallet}
+                      className="mb-2 text-red-500 hover:text-red-600 hover:underline hover:cursor-pointer"
+                    >
+                      Disconnect
+                    </p>
+                  ) : (
+                    <p
+                      onClick={connectWallet}
+                      className="mb-2 text-green-500 hover:text-green-600 hover:underline hover:cursor-pointer"
+                    >
+                      Connect Wallet
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

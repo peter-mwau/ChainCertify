@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { DarkModeProvider } from "../contexts/themeContext";
 import { UserContext } from "../contexts/userContext";
 import PropTypes from "prop-types";
@@ -6,15 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/authContext";
 import { QuizContext } from "../contexts/quizContext";
 import { AssignmentContext } from "../contexts/assignmentContext";
-import "@rainbow-me/rainbowkit/styles.css";
-import {
-  getDefaultConfig,
-  RainbowKitProvider,
-  lightTheme,
-} from "@rainbow-me/rainbowkit";
-import { WagmiProvider } from "wagmi";
-import { sepolia, mainnet, skaleTitanTestnet } from "wagmi/chains";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import WalletContext from "../contexts/walletContext";
+import { ethers } from "ethers";
+import { BrowserProvider } from "ethers";
 
 export default function Providers({ children }) {
   const [user, setUser] = useState(null);
@@ -23,15 +17,69 @@ export default function Providers({ children }) {
   const { refreshAccessToken, accessToken, api } = useAuth();
   const [quiz, setQuiz] = useState(null);
   const [assignments, setAssignments] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState("");
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
 
-  const config = getDefaultConfig({
-    appName: "My RainbowKit App",
-    projectId: "1e91e33eb8db73af7f34de8d02fb03f1",
-    chains: [sepolia, mainnet, skaleTitanTestnet],
-    autoConnect: true,
-  });
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        // Request accounts
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+        const account = await signer.getAddress();
 
-  const queryClient = new QueryClient();
+        // Get balance for the specific account
+        const balance = await provider.getBalance(account);
+        const etherBalance = ethers.formatEther(balance);
+
+        // Update state
+        setBalance(etherBalance);
+        setAccount(account);
+        setIsWalletConnected(true);
+
+        return { account, etherBalance };
+      } catch (error) {
+        console.error("Failed to connect to MetaMask:", error);
+        setIsWalletConnected(false);
+        setAccount(null);
+        setBalance("");
+        throw error; // Re-throw the error for handling by the caller
+      }
+    } else {
+      const error = new Error("Please install MetaMask!");
+      console.error(error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    console.log(
+      "Account: ",
+      account,
+      "Balance: ",
+      balance,
+      "Connection Status: ",
+      isWalletConnected
+    );
+  }, [account, balance, isWalletConnected]);
+
+  const disconnectWallet = () => {
+    setAccount(null); // Resets the connected account state
+    setIsWalletConnected(false);
+  };
+
+  const walletContextValue = useMemo(
+    () => ({
+      account,
+      balance,
+      isWalletConnected,
+      connectWallet,
+      disconnectWallet,
+    }),
+    [account, isWalletConnected, balance]
+  );
 
   // Function to get user details
   const getUser = useCallback(async () => {
@@ -154,18 +202,9 @@ export default function Providers({ children }) {
               refreshAssignments: fetchAssignments,
             }}
           >
-            <WagmiProvider autoConnect config={config}>
-              <QueryClientProvider client={queryClient}>
-                <RainbowKitProvider
-                  theme={lightTheme({
-                    accentColor: "#083344",
-                    accentColorForeground: "white",
-                  })}
-                >
-                  {children}
-                </RainbowKitProvider>
-              </QueryClientProvider>
-            </WagmiProvider>
+            <WalletContext.Provider value={walletContextValue}>
+              {children}
+            </WalletContext.Provider>
           </AssignmentContext.Provider>
         </QuizContext.Provider>
       </UserContext.Provider>
