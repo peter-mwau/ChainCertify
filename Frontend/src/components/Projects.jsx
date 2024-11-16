@@ -55,6 +55,8 @@ const Projects = () => {
     setProjectImages(e.target.files);
   };
 
+  console.log("Submitted projects: ", submittedProjects);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -239,6 +241,32 @@ const Projects = () => {
                               className="rounded-md"
                               loading="lazy"
                             />
+                          </div>
+                          <div className="mt-4 flex flex-col gap-3">
+                            <span
+                              className={`inline-block px-3 py-1 text-sm font-semibold rounded-full w-[110px] ${
+                                project.grading && project.grading.length > 0
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {project.grading && project.grading.length > 0
+                                ? `Grade: ${project.grading[0].grade}%`
+                                : "Not Graded"}
+                            </span>
+                            <span className="text-green-500 italic">
+                              {project.grading && project.grading.length > 0 ? (
+                                project.grading[0].feedback || (
+                                  <span className="text-red-600">
+                                    No feedback provided.
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-red-600">
+                                  No feedback provided.
+                                </span>
+                              )}
+                            </span>
                           </div>
                         </li>
                       ))
