@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import html2canvas from "html2canvas";
 import html2pdf from "html2pdf.js";
 import "../index.css";
@@ -249,15 +249,19 @@ const Certificate = () => {
                     </div>
                   </div>
                 </div>
-                <p className="text-wrapper-9 flex mx-auto flex-col items-center justify-center w-full">
+                {/* <p className="text-wrapper-9 flex mx-auto flex-col items-center justify-center w-full">
                   Certificate ID: <span>{certID.toString()}</span>
-                </p>
+                </p> */}
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?data=http://0.0.0.0:8080/verify-certificate/?certificate_id=${certID}`}
                   alt="QR Code"
                   className="h-[80px] relative mt-[580px] ml-[800px]"
                 />
-                <img className="logo" src="/Africa1.jpg" alt="Logo" />
+                <img
+                  className="logo rounded-full w-10 h-10 p-3 bg-gradient-to-r from-black"
+                  src="/Africa1.jpg"
+                  alt="Logo"
+                />
               </div>
             </div>
           </div>

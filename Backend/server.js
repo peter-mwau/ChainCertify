@@ -1110,9 +1110,9 @@ app.get("/api/mint-status", async (req, res) => {
 
 // POST endpoint to save certificate details
 app.post('/api/certificates', async (req, res) => {
-    const { to, tokenId, names, institution, courseName, issueDate, userId } = req.body;
+    const { to, tokenId, institution, courseName, issueDate, userId } = req.body;
 
-    if (!to || !tokenId || !names || !institution || !courseName || !issueDate || !userId) {
+    if (!to || !tokenId || !institution || !courseName || !issueDate || !userId) {
         return res.status(400).json({ error: "All fields are required" });
     }
 

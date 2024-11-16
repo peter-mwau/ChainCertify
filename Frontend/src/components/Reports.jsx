@@ -6,8 +6,7 @@ import { useAuth } from "../contexts/authContext";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import ABI from "../artifacts/contracts/ChainCertifyNFT.sol/ChainCertifyNFT.json";
-import { useDisconnect, useAccount } from "wagmi";
-import { useEthersSigner } from "../components/useEtherSign";
+import WalletContext from "../contexts/walletContext";
 
 const contractAddress = import.meta.env.VITE_APP_CONTRACT_ADDRESS;
 const contractABI = ABI.abi;
@@ -18,9 +17,8 @@ const Reports = () => {
   const { api } = useAuth();
   const [mintAllowed, setMintAllowed] = useState(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
-  const { isConnected, address } = useAccount();
-  const { disconnect } = useDisconnect();
-  const signerPromise = useEthersSigner();
+  const { isWalletConnected, connectWallet, account, balance } =
+    useContext(WalletContext);
   const navigate = useNavigate();
 
   const handleClosePopup = () => {
@@ -118,129 +116,126 @@ const Reports = () => {
   }, []);
 
   const handleClaimCertificate = async () => {
-    if (!isConnected) {
+    if (!isWalletConnected) {
       alert("Please connect your wallet to mint the certificate.");
       return;
     }
 
     try {
-      // Get the signer
-      const signer = await signerPromise;
-      if (!signer) {
-        throw new Error("No signer available. Please connect your wallet.");
-      }
-
-      // Log contract details for debugging
-      console.log("Contract Address:", contractAddress);
-      console.log("User Address:", address);
-      console.log("Token ID:", user.id);
-
-      // Create a contract instance using the signer
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         contractAddress,
         contractABI,
         signer
       );
 
-      // Define certificate details and tokenId
-      const tokenId = user.id;
+      // Generate a smaller, database-friendly ID
+      const dbTokenId = Math.floor(Date.now() / 1000); // Unix timestamp as integer
+
+      // Generate blockchain tokenId (BigInt)
+      const randomPart = Math.floor(Math.random() * 1000000);
+      const tokenIdString = `${user.id}-${randomPart}-${Date.now()}`;
+      const blockchainTokenId = BigInt(tokenIdString.replace(/-/g, ""));
+
       const _names = user.name;
       const _institution = "ABYA UNIVERSITY";
       const _courseName = "Introduction to Blockchain";
       const _issueDate = new Date().toISOString().split("T")[0];
 
-      // Log transaction parameters
       console.log("Minting Parameters:", {
-        address,
-        tokenId,
+        account,
+        blockchainTokenId: blockchainTokenId.toString(),
+        dbTokenId,
         _names,
         _institution,
         _courseName,
         _issueDate,
       });
 
-      // Get the actual function signature from the ABI
-      const mintFunction = contract.interface.functions["mintNFT"];
-      console.log("Mint function signature:", mintFunction.format());
-
-      // Estimate gas before transaction
-      try {
-        const gasEstimate = await contract.estimateGas.mintNFT(
-          address,
-          tokenId,
-          _names,
-          _institution,
-          _courseName,
-          _issueDate
-        );
-        console.log("Estimated Gas:", gasEstimate.toString());
-      } catch (gasError) {
-        console.error("Gas Estimation Error:", gasError);
-        throw new Error(
-          "Failed to estimate gas. The transaction might fail: " +
-            gasError.message
-        );
-      }
-
-      // Call the mintNFT function with explicit gas limit
-      const tx = await contract.mintNFT(
-        address,
-        tokenId,
+      // Add gas estimation
+      const gasEstimate = await contract.mintNFT.estimateGas(
+        account,
+        blockchainTokenId,
         _names,
         _institution,
         _courseName,
         _issueDate
-        // {
-        //   gasLimit: 500000, // Adjust this value based on your gas estimation
-        // }
+      );
+
+      const gasLimit = BigInt(Math.floor(Number(gasEstimate) * 1.2));
+
+      const tx = await contract.mintNFT(
+        account,
+        blockchainTokenId,
+        _names,
+        _institution,
+        _courseName,
+        _issueDate,
+        {
+          gasLimit: gasLimit,
+        }
       );
 
       console.log("Transaction Hash:", tx.hash);
 
       const receipt = await tx.wait();
-      console.log("Transaction Receipt:", receipt);
 
-      const event = receipt.events?.find(
-        (event) => event.event === "CertificateMinted"
-      );
-
-      if (!event) {
-        throw new Error(
-          "CertificateMinted event not found in transaction receipt"
-        );
+      if (!receipt) {
+        throw new Error("Transaction failed - no receipt received");
       }
 
-      const certID = event.args.certID;
-      console.log("Certificate ID:", certID);
+      console.log("Transaction Receipt:", receipt);
 
-      // Make a POST request to save the certificate details
-      const apiResponse = await api.post("/api/certificates", {
-        to: address,
-        tokenId,
-        institution: _institution,
-        courseName: _courseName,
-        issueDate: _issueDate,
-        userId: user.id,
-      });
-
-      console.log("API Response:", apiResponse);
-
-      setTimeout(() => {
-        navigate("/certificate", {
-          state: {
-            to: address,
-            tokenId: user.id,
-            names: _names,
+      if (receipt.status === 1) {
+        try {
+          // Send the database-friendly integer ID to the API
+          const apiResponse = await api.post("/api/certificates", {
+            to: account,
+            tokenId: dbTokenId, // Using the smaller, integer ID for database
+            blockchainTokenId: blockchainTokenId.toString(), // Optional: if you want to store the blockchain token ID as string
             institution: _institution,
             courseName: _courseName,
             issueDate: _issueDate,
             userId: user.id,
-            certID: certID,
-          },
-        });
-      }, 2000);
+          });
 
-      handleClosePopup();
+          console.log("API Response:", apiResponse);
+
+          alert("Certificate minted successfully!");
+
+          setTimeout(() => {
+            navigate("/certificate", {
+              state: {
+                to: account,
+                tokenId: dbTokenId, // Using the database ID for navigation
+                names: _names,
+                institution: _institution,
+                courseName: _courseName,
+                issueDate: _issueDate,
+                userId: user.id,
+                blockchainTokenId: blockchainTokenId.toString(), // Optional: if needed in the certificate view
+              },
+            });
+          }, 2000);
+
+          handleClosePopup();
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          console.error("API Error Details:", {
+            message: apiError.message,
+            response: apiError.response?.data,
+            status: apiError.response?.status,
+          });
+          alert(
+            "Certificate minted successfully, but there was an error saving the details. Please contact support."
+          );
+        }
+      } else {
+        throw new Error(
+          `Transaction failed - receipt status: ${receipt.status}`
+        );
+      }
     } catch (error) {
       console.error("Error Details:", {
         message: error.message,
@@ -248,9 +243,9 @@ const Reports = () => {
         data: error.data,
         transaction: error.transaction,
         receipt: error.receipt,
+        stack: error.stack,
       });
 
-      // Handle specific error cases
       let errorMessage = "An error occurred while minting the certificate.";
 
       if (error.code === "ACTION_REJECTED") {
@@ -259,16 +254,63 @@ const Reports = () => {
         errorMessage = "Insufficient funds to complete the transaction.";
       } else if (error.message.includes("gas")) {
         errorMessage =
-          "Transaction failed due to gas estimation. Please try again with a higher gas limit.";
+          "Transaction failed due to gas estimation. Please try again.";
       } else if (error.message.includes("nonce")) {
         errorMessage =
           "Transaction nonce error. Please reset your wallet's transaction history.";
+      } else if (error.message.includes("BigInt")) {
+        errorMessage = "Error with transaction values. Please try again.";
       }
 
       alert(errorMessage);
-      throw error; // Re-throw for debugging purposes
+      throw error;
     }
   };
+
+  function roundOff(number, decimalPlaces = 2) {
+    if (isNaN(number)) {
+      console.log("Invalid number");
+      return 0;
+    }
+
+    const factor = Math.pow(10, decimalPlaces);
+    return Math.round(number * factor) / factor;
+  }
+
+  function getGrade() {
+    // Check if the user object and the grading array exist
+    if (!user || !user.grading) {
+      console.log("Invalid user object");
+      return 0;
+    }
+
+    // Filter out grades that are 0 or belong to quizzes (have a quizId)
+    const filteredGrades = user.grading.filter(
+      (item) => item.grade > 0 && !item.quizId
+    );
+
+    // Get the grades after filtering
+    const gradesAboveZero = filteredGrades.map((item) => item.grade);
+    console.log("Filtered Grades: ", gradesAboveZero);
+
+    // Calculate the sum of the filtered grades
+    const sumOfGrades = gradesAboveZero.reduce((sum, grade) => sum + grade, 0);
+
+    // Calculate the total possible grades for percentage calculation
+    // Assuming a maximum of 75 points per grade (adjust this as per your grading scale)
+    const totalPossible = filteredGrades.length * 100;
+
+    // Calculate the percentage
+    const percentage = roundOff((sumOfGrades / totalPossible) * 100, 2);
+
+    console.log("Percentage: ", percentage);
+
+    return percentage;
+  }
+
+  getGrade();
+
+  console.log(user);
 
   return (
     <>
@@ -276,7 +318,7 @@ const Reports = () => {
         <div className="mx-auto right-0 flex items-end justify-end">
           {isLoggedIn ? (
             mintAllowed ? (
-              user?.grading[0]?.grade >= 80 ? (
+              getGrade() >= 80 ? (
                 <button
                   onClick={handleOpenPopup}
                   className="bg-cyan-950 text-gray-50 font-semibold p-2 rounded-md my-2 hover:cursor-pointer hover:bg-yellow-500"

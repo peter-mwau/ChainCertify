@@ -9,6 +9,11 @@ import { AssignmentContext } from "../contexts/assignmentContext";
 import WalletContext from "../contexts/walletContext";
 import { ethers } from "ethers";
 import { BrowserProvider } from "ethers";
+import CertificateContext from "../contexts/certificateContext";
+import ABI from "../artifacts/contracts/ChainCertifyNFT.sol/ChainCertifyNFT.json";
+
+const contractAddress = import.meta.env.VITE_APP_CONTRACT_ADDRESS;
+const contractABI = ABI.abi;
 
 export default function Providers({ children }) {
   const [user, setUser] = useState(null);
@@ -20,31 +25,37 @@ export default function Providers({ children }) {
   const [account, setAccount] = useState(null);
   const [balance, setBalance] = useState("");
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [certificate, setCertificate] = useState(null);
 
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
         // Request accounts
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = await provider.getSigner();
+        const providerInstance = new ethers.BrowserProvider(window.ethereum);
+        await providerInstance.send("eth_requestAccounts", []);
+        const signer = await providerInstance.getSigner();
         const account = await signer.getAddress();
 
         // Get balance for the specific account
-        const balance = await provider.getBalance(account);
+        const balance = await providerInstance.getBalance(account);
         const etherBalance = ethers.formatEther(balance);
 
         // Update state
         setBalance(etherBalance);
         setAccount(account);
         setIsWalletConnected(true);
+        setProvider(providerInstance);
+        setSigner(signer);
 
-        return { account, etherBalance };
+        return { account, etherBalance, provider: providerInstance };
       } catch (error) {
         console.error("Failed to connect to MetaMask:", error);
         setIsWalletConnected(false);
         setAccount(null);
         setBalance("");
+        setProvider(null);
         throw error; // Re-throw the error for handling by the caller
       }
     } else {
@@ -75,6 +86,8 @@ export default function Providers({ children }) {
       account,
       balance,
       isWalletConnected,
+      provider,
+      signer,
       connectWallet,
       disconnectWallet,
     }),
@@ -179,6 +192,36 @@ export default function Providers({ children }) {
     };
   }, [refreshAllData]);
 
+  // getcertificatedetails from blockchain
+  const getCertifiedDetails = async () => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      let userId;
+
+      const certifiedDetails = await contract.getCertificateDetails(userId);
+      console.log("Certificate Details: ", certifiedDetails);
+      setCertificate(certifiedDetails);
+      return certifiedDetails;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (user && user.id) {
+  //     getCertifiedDetails();
+  //   }
+
+  //   console.log("user: ", user);
+  // }, [user]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -203,7 +246,9 @@ export default function Providers({ children }) {
             }}
           >
             <WalletContext.Provider value={walletContextValue}>
-              {children}
+              <CertificateContext.Provider value={getCertifiedDetails}>
+                {children}
+              </CertificateContext.Provider>
             </WalletContext.Provider>
           </AssignmentContext.Provider>
         </QuizContext.Provider>

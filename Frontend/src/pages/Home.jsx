@@ -12,6 +12,7 @@ import { IoNavigateSharp } from "react-icons/io5";
 import Projects from "../components/Projects";
 import Reports from "../components/Reports";
 import Dashboard from "../components/Dashboard";
+import Certificate from "../components/Certificate";
 
 const Home = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -267,6 +268,19 @@ const Home = () => {
               Contact Us
             </Link>
           </li>
+          <li>
+            <Link
+              to="/"
+              className={`block p-2 rounded transition-colors ${
+                activeSection === "certificate"
+                  ? "bg-gray-300 text-gray-800 dark:bg-cyan-700 dark:text-gray-100"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-cyan-700"
+              }`}
+              onClick={() => setActiveSection("certificate")}
+            >
+              Certificate
+            </Link>
+          </li>
           {isLoggedIn ? (
             <li
               onClick={logout}
@@ -441,6 +455,8 @@ const Home = () => {
           )}
 
         {activeSection === "reports" && <Reports />}
+
+        {activeSection === "certificate" && <Certificate />}
 
         {/*contact us page */}
         {activeSection === "contact" && <Contact />}

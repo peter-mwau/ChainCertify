@@ -38,7 +38,7 @@ const GradingModal = ({ isOpen, onClose, submission }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ">
       <div className="bg-white dark:bg-cyan-700 dark:bg-opacity-80 rounded-lg p-6 w-11/12 md:w-1/3">
         <h2 className="text-2xl font-semibold mb-4 dark:text-gray-200">
           Grade Submission
@@ -53,7 +53,7 @@ const GradingModal = ({ isOpen, onClose, submission }) => {
           <strong>Submitted On:</strong>{" "}
           {new Date(submission.submissionDate).toLocaleDateString()}
         </p>
-        <p className="text-gray-600 dark:text-gray-300 mb-2">
+        <p className="text-gray-600 dark:text-gray-300 mb-2 overflow-auto h-[20vh]">
           <strong>Content:</strong> {submission.content}
         </p>
 
